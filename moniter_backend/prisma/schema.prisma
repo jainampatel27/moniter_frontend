@@ -14,10 +14,67 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int         @id @default(autoincrement())
+  email      String      @unique
+  password   String
+  name       String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  workspaces Workspace[]
+}
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monitors  Monitor[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Monitor {
+  id             String         @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name           String
+  url            String
+  type           MonitorType    @default(HTTP)
+  method         HttpMethod     @default(GET)
+  interval       Int            @default(5)
+  headers        Json?
+  body           String?
+  expectedStatus Int?
+  expectedBody   String?
+  paused         Boolean        @default(false)
+  lastCheckedAt  DateTime?
+  checks         MonitorCheck[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model MonitorCheck {
+  id         String   @id @default(cuid())
+  monitorId  String
+  monitor    Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  ok         Boolean
+  statusCode Int?
+  responseMs Int?
+  error      String?
+  startedAt  DateTime @default(now())  // when this up/down streak started
+  checkedAt  DateTime @updatedAt        // last time a check ran in this streak
+  checkCount Int      @default(1)       // how many checks are in this streak
+
+  @@index([monitorId, startedAt(sort: Desc)])
+}
+
+enum MonitorType {
+  HTTP
+  TCP
+}
+
+enum HttpMethod {
+  GET
+  POST
+  HEAD
 }

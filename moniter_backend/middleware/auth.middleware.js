@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-123!';
+// JWT_SECRET presence is enforced at startup in index.js
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authMiddleware = async (req, res, next) => {
     try {

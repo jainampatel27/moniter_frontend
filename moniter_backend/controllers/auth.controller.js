@@ -2,14 +2,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-123!';
+// JWT_SECRET presence is enforced at startup in index.js
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        if (!name || typeof name !== 'string' || name.trim().length < 1)
+            return res.status(400).json({ error: 'Name is required.' });
+        if (!email || !EMAIL_RE.test(email))
+            return res.status(400).json({ error: 'A valid email is required.' });
+        if (!password || typeof password !== 'string' || password.length < 8)
+            return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+
         // Check if user already exists
-        const existingUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
         }
@@ -20,8 +30,8 @@ const signup = async (req, res) => {
         // Create user
         const user = await prisma.user.create({
             data: {
-                name,
-                email,
+                name: name.trim(),
+                email: email.toLowerCase(),
                 password: hashedPassword,
             },
         });
@@ -37,8 +47,11 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password)
+            return res.status(400).json({ error: 'Email and password are required.' });
+
         // Find user
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email: (email || '').toLowerCase() } });
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
