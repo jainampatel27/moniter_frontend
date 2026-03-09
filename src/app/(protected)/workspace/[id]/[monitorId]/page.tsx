@@ -22,6 +22,14 @@ function fmtDuration(ms: number): string {
     return `${(ms / 86_400_000).toFixed(1)}d`;
 }
 
+function fmtRelative(date: Date): string {
+    const diffMs = Date.now() - date.getTime();
+    if (diffMs < 60_000)     return `${Math.round(diffMs / 1000)}s ago`;
+    if (diffMs < 3_600_000)  return `${Math.floor(diffMs / 60_000)}m ago`;
+    if (diffMs < 86_400_000) return `${Math.floor(diffMs / 3_600_000)}h ago`;
+    return `${Math.floor(diffMs / 86_400_000)}d ago`;
+}
+
 type WithDuration = CheckRecord & { durationMs: number; endTime: Date };
 
 /** Annotate each streak with its duration.
@@ -378,23 +386,33 @@ export default function MonitorDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                    {latest ? (
-                        latest.ok ? (
-                            <span className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-200 dark:border-emerald-800">
-                                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                                Up {latest.responseMs != null ? `· ${latest.responseMs}ms` : ""}
-                            </span>
+                    <div className="flex flex-col items-end gap-1">
+                        {latest ? (
+                            latest.ok ? (
+                                <span className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-200 dark:border-emerald-800">
+                                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Up {latest.responseMs != null ? `· ${latest.responseMs}ms` : ""}
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 font-medium border border-red-200 dark:border-red-800">
+                                    <span className="size-2 rounded-full bg-red-500" />
+                                    Down
+                                </span>
+                            )
                         ) : (
-                            <span className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 font-medium border border-red-200 dark:border-red-800">
-                                <span className="size-2 rounded-full bg-red-500" />
-                                Down
+                            <span className="text-xs text-zinc-400 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                No checks yet
                             </span>
-                        )
-                    ) : (
-                        <span className="text-xs text-zinc-400 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800">
-                            No checks yet
-                        </span>
-                    )}
+                        )}
+                        {latest && (
+                            <span
+                                className="text-xs text-muted-foreground"
+                                title={new Date(latest.checkedAt).toLocaleString()}
+                            >
+                                Last checked {fmtRelative(new Date(latest.checkedAt))}
+                            </span>
+                        )}
+                    </div>
                     <Button variant="outline" size="sm" className="gap-2" onClick={handleManualCheck} disabled={checking}>
                         {checking
                             ? <><Loader2 className="size-3.5 animate-spin" /> Checking…</>
