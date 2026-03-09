@@ -32,7 +32,7 @@ export default function LoginPage() {
                         <p className="text-xl font-medium leading-relaxed tracking-wide text-zinc-100/90 italic">
                             &ldquo;Monitoring our infrastructure has never been easier. The insights we gain are invaluable.&rdquo;
                         </p>
-                        <footer className="text-sm font-semibold text-zinc-400">Jainam Patel, System Architect</footer>
+                        <footer className="text-sm font-semibold text-zinc-400">System Architect</footer>
                     </blockquote>
                 </div>
             </div>
