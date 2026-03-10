@@ -65,11 +65,10 @@ const login = async (req, res) => {
         // Generate JWT
         const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
-        // Set cookie
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: true, // Must be true for SameSite: 'none'
+            sameSite: 'none', // Critical for cross-domain cookies
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -89,7 +88,7 @@ const me = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-    res.clearCookie('token');
+    res.clearCookie('token', { sameSite: 'none', secure: true });
     res.json({ message: 'Logged out successfully' });
 };
 
