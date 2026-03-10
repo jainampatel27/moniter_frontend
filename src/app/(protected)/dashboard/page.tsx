@@ -88,10 +88,10 @@ function StatCard({
         accent === "green"
             ? "text-emerald-500"
             : accent === "red"
-              ? "text-red-500"
-              : accent === "yellow"
-                ? "text-amber-500"
-                : "text-zinc-500 dark:text-zinc-400";
+                ? "text-red-500"
+                : accent === "yellow"
+                    ? "text-amber-500"
+                    : "text-zinc-500 dark:text-zinc-400";
 
     return (
         <Card className="hover:shadow-md transition-shadow">
@@ -154,25 +154,25 @@ export default function DashboardPage() {
 
     // ── Derived values ────────────────────────────────────────────────────────
     const uptimeLabel = s?.overallUptimePct != null ? `${s.overallUptimePct}%` : "—";
-    const respLabel   = s?.avgResponseMs    != null ? `${s.avgResponseMs} ms` : "—";
+    const respLabel = s?.avgResponseMs != null ? `${s.avgResponseMs} ms` : "—";
 
-    const uptimeAccent: "green" | "red" | "zinc" =
-        s?.overallUptimePct == null      ? "zinc"
-        : parseFloat(s.overallUptimePct) >= 99 ? "green"
-        : parseFloat(s.overallUptimePct) >= 95 ? "yellow" as "zinc"
-        : "red";
+    const uptimeAccent: "green" | "red" | "yellow" | "zinc" =
+        s?.overallUptimePct == null ? "zinc"
+            : parseFloat(s.overallUptimePct) >= 99 ? "green"
+                : parseFloat(s.overallUptimePct) >= 95 ? "yellow"
+                    : "red";
 
     const respAccent: "green" | "red" | "yellow" | "zinc" =
         s?.avgResponseMs == null ? "zinc"
-        : s.avgResponseMs <= 300 ? "green"
-        : s.avgResponseMs <= 800 ? "yellow"
-        : "red";
+            : s.avgResponseMs <= 300 ? "green"
+                : s.avgResponseMs <= 800 ? "yellow"
+                    : "red";
 
     // Recharts-friendly: replace null with undefined so recharts skips the point
     const chartDaily = (data?.dailyStats ?? []).map((d) => ({
         ...d,
         avgResponseMs: d.avgResponseMs ?? undefined,
-        uptimePct:     d.uptimePct     ?? undefined,
+        uptimePct: d.uptimePct ?? undefined,
     }));
 
     const chartMonitors = (data?.monitorBreakdown ?? [])
@@ -235,8 +235,8 @@ export default function DashboardPage() {
                             s!.monitorsDown > 0
                                 ? `${s!.monitorsDown} monitor${s!.monitorsDown > 1 ? "s" : ""} need attention`
                                 : s!.activeMonitors > 0
-                                  ? "All systems operational"
-                                  : undefined
+                                    ? "All systems operational"
+                                    : undefined
                         }
                         icon={Activity}
                         accent={s!.monitorsDown > 0 ? "red" : "green"}
@@ -248,8 +248,8 @@ export default function DashboardPage() {
                             s!.incidentsLast7d > 0
                                 ? `${s!.incidentsLast7d} outage event${s!.incidentsLast7d > 1 ? "s" : ""} this week`
                                 : s!.activeMonitors > 0
-                                  ? "No outages this week"
-                                  : undefined
+                                    ? "No outages this week"
+                                    : undefined
                         }
                         icon={TrendingUp}
                         accent={uptimeAccent === "yellow" ? "yellow" : uptimeAccent}
@@ -261,10 +261,10 @@ export default function DashboardPage() {
                             s!.avgResponseMs == null
                                 ? "No checks yet"
                                 : s!.avgResponseMs <= 300
-                                  ? "Healthy response time"
-                                  : s!.avgResponseMs <= 800
-                                    ? "Slightly elevated"
-                                    : "High latency detected"
+                                    ? "Healthy response time"
+                                    : s!.avgResponseMs <= 800
+                                        ? "Slightly elevated"
+                                        : "High latency detected"
                         }
                         icon={Clock}
                         accent={respAccent}
@@ -295,8 +295,8 @@ export default function DashboardPage() {
                                 <AreaChart data={chartDaily} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="respGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%"  stopColor="#10b981" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}   />
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-700" />
@@ -357,8 +357,8 @@ export default function DashboardPage() {
                                 <AreaChart data={chartDaily} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="upGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}   />
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-700" />
@@ -497,9 +497,9 @@ export default function DashboardPage() {
                                             {m.name}
                                         </td>
                                         <td className="px-4 py-2.5 text-right">
-                                            {m.status === "up"      && <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-3.5" /> Up</span>}
-                                            {m.status === "down"    && <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400"><XCircle className="size-3.5" /> Down</span>}
-                                            {m.status === "paused"  && <span className="text-zinc-400">Paused</span>}
+                                            {m.status === "up" && <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-3.5" /> Up</span>}
+                                            {m.status === "down" && <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400"><XCircle className="size-3.5" /> Down</span>}
+                                            {m.status === "paused" && <span className="text-zinc-400">Paused</span>}
                                             {m.status === "pending" && <span className="text-zinc-400">Pending</span>}
                                         </td>
                                         <td className="px-4 py-2.5 text-right text-zinc-700 dark:text-zinc-300">
