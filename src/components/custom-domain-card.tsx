@@ -38,13 +38,13 @@ export function CustomDomainCard({
 }: CustomDomainCardProps) {
     const target = appHostname ?? (typeof window !== "undefined" ? window.location.hostname : "app.neuraledgeworks.com");
 
-    const [savedDomain, setSavedDomain]   = useState<string | null>(null);
-    const [inputDomain, setInputDomain]   = useState("");
-    const [status, setStatus]             = useState<DomainStatus>("idle");
-    const [errorMsg, setErrorMsg]         = useState<string | null>(null);
-    const [copied, setCopied]             = useState(false);
-    const [step, setStep]                 = useState<1 | 2 | 3>(1);
-    const [loadingInit, setLoadingInit]   = useState(true);
+    const [savedDomain, setSavedDomain] = useState<string | null>(null);
+    const [inputDomain, setInputDomain] = useState("");
+    const [status, setStatus] = useState<DomainStatus>("idle");
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [loadingInit, setLoadingInit] = useState(true);
 
     // ── Load existing custom domain ──────────────────────────────────────────
     useEffect(() => {
@@ -212,25 +212,22 @@ export function CustomDomainCard({
                     {([1, 2, 3] as const).map((s, i) => (
                         <div key={s} className="flex items-center gap-0 flex-1 last:flex-none">
                             <div className="flex flex-col items-center gap-1">
-                                <div className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold border-2 transition-colors ${
-                                    step > s
+                                <div className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold border-2 transition-colors ${step > s
                                         ? "bg-primary border-primary text-primary-foreground"
                                         : step === s
                                             ? "border-primary text-primary bg-primary/10"
                                             : "border-zinc-200 dark:border-zinc-700 text-zinc-400"
-                                }`}>
+                                    }`}>
                                     {step > s ? <Check className="size-3.5" /> : s}
                                 </div>
-                                <span className={`text-[10px] font-medium whitespace-nowrap ${
-                                    step >= s ? "text-primary" : "text-muted-foreground"
-                                }`}>
+                                <span className={`text-[10px] font-medium whitespace-nowrap ${step >= s ? "text-primary" : "text-muted-foreground"
+                                    }`}>
                                     {s === 1 ? "Enter domain" : s === 2 ? "Add CNAME" : "Verified"}
                                 </span>
                             </div>
                             {i < 2 && (
-                                <div className={`h-0.5 flex-1 mx-2 mb-4 rounded-full transition-colors ${
-                                    step > s ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700"
-                                }`} />
+                                <div className={`h-0.5 flex-1 mx-2 mb-4 rounded-full transition-colors ${step > s ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700"
+                                    }`} />
                             )}
                         </div>
                     ))}
@@ -318,6 +315,20 @@ export function CustomDomainCard({
                                 <p>⏱️ DNS changes can take <strong>a few minutes to 48 hours</strong> to propagate globally.</p>
                                 <p>🔒 SSL certificate will be provisioned automatically once verified.</p>
                             </div>
+                        </div>
+
+                        {/* Cloudflare warning */}
+                        <div className="rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 px-4 py-3 space-y-1.5">
+                            <p className="text-xs font-semibold text-orange-800 dark:text-orange-200 flex items-center gap-1.5">
+                                ☁️ Using Cloudflare? Important!
+                            </p>
+                            <p className="text-xs text-orange-700 dark:text-orange-300">
+                                Set the CNAME proxy status to <strong>DNS only</strong> (grey cloud, not orange).
+                                Leaving it as <strong>Proxied</strong> (orange ☁️) will cause an SSL handshake error.
+                            </p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-mono bg-orange-100 dark:bg-orange-900/40 rounded px-2 py-1">
+                                Cloudflare → DNS → CNAME record → toggle to &quot;DNS only&quot;
+                            </p>
                         </div>
 
                         {/* Entered domain reminder */}
