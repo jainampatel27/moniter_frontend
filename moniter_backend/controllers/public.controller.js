@@ -35,7 +35,7 @@ const publicStatus = async (req, res) => {
         });
 
         const monitorIds = monitors.map((m) => m.id);
-        const cutoff     = new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000);
+        const cutoff = new Date(Date.now() - HISTORY_DAYS * 24 * 60 * 60 * 1000);
 
         // Cap rows to prevent oversized responses on large workspaces
         const rowCap = Math.min(monitorIds.length * 40, 8_000);
@@ -63,25 +63,25 @@ const publicStatus = async (req, res) => {
             let upMs = 0, totalMs = 0;
             for (let i = 0; i < checks.length; i++) {
                 const pStart = new Date(checks[i].startedAt).getTime();
-                const pEnd   = i === 0 ? now : new Date(checks[i - 1].startedAt).getTime();
-                const dur    = Math.max(0, pEnd - pStart);
+                const pEnd = i === 0 ? now : new Date(checks[i - 1].startedAt).getTime();
+                const dur = Math.max(0, pEnd - pStart);
                 totalMs += dur;
                 if (checks[i].ok) upMs += dur;
             }
             return {
-                monitor:   m,
-                latest:    checks[0] ?? null,
+                monitor: m,
+                latest: checks[0] ?? null,
                 uptimePct: totalMs > 0 ? ((upMs / totalMs) * 100).toFixed(2) : null,
                 checks,      // full 20-day streak history
             };
         });
 
         // Overall system status
-        const anyDown    = statuses.some((s) => s.latest && !s.latest.ok);
+        const anyDown = statuses.some((s) => s.latest && !s.latest.ok);
         const anyPending = statuses.every((s) => !s.latest);
         const systemStatus = anyPending ? 'pending'
-            : anyDown      ? 'degraded'
-            : 'operational';
+            : anyDown ? 'degraded'
+                : 'operational';
 
         res.json({ workspace, statuses, systemStatus });
     } catch (err) {
@@ -90,4 +90,26 @@ const publicStatus = async (req, res) => {
     }
 };
 
-module.exports = { publicStatus };
+/**
+ * GET /api/public/domain/:hostname
+ *
+ * Looks up which workspaceId owns a verified custom domain.
+ * Called by the Next.js middleware on every custom-domain request.
+ * Returns { workspaceId } or 404.
+ */
+const lookupDomain = async (req, res) => {
+    const { hostname } = req.params;
+    try {
+        const workspace = await prisma.workspace.findFirst({
+            where: { customDomain: hostname, domainVerified: true },
+            select: { id: true },
+        });
+        if (!workspace) return res.status(404).json({ error: 'Unknown domain' });
+        return res.json({ workspaceId: workspace.id });
+    } catch (err) {
+        console.error('lookupDomain error:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+module.exports = { publicStatus, lookupDomain };
