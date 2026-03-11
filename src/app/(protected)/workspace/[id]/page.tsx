@@ -19,14 +19,14 @@ export default function WorkspaceDetailPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
-    const [workspace, setWorkspace]     = useState<Workspace | null>(null);
-    const [monitors, setMonitors]       = useState<Monitor[]>([]);
-    const [statusMap, setStatusMap]     = useState<StatusMap>({});
+    const [workspace, setWorkspace] = useState<Workspace | null>(null);
+    const [monitors, setMonitors] = useState<Monitor[]>([]);
+    const [statusMap, setStatusMap] = useState<StatusMap>({});
     const [checkingIds, setCheckingIds] = useState<Set<string>>(new Set());
     const [loadingPage, setLoadingPage] = useState(true);
-    const [notFound, setNotFound]       = useState(false);
-    const [dialogOpen, setDialogOpen]   = useState(false);
-    const [editTarget, setEditTarget]   = useState<Monitor | null>(null);
+    const [notFound, setNotFound] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editTarget, setEditTarget] = useState<Monitor | null>(null);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // ── Load workspace + monitors ──────────────────────────────────────────
@@ -82,12 +82,12 @@ export default function WorkspaceDetailPage() {
     };
 
     // ── CRUD ───────────────────────────────────────────────────────────────
-    const openAdd  = () => { setEditTarget(null); setDialogOpen(true); };
+    const openAdd = () => { setEditTarget(null); setDialogOpen(true); };
     const openEdit = (m: Monitor) => { setEditTarget(m); setDialogOpen(true); };
 
     // ── Status summary counts ──────────────────────────────────────────────
     const activeMonitors = monitors.filter((m) => !m.paused);
-    const upCount   = activeMonitors.filter((m) => statusMap[m.id]?.latest?.ok === true).length;
+    const upCount = activeMonitors.filter((m) => statusMap[m.id]?.latest?.ok === true).length;
     const downCount = activeMonitors.filter((m) => statusMap[m.id]?.latest?.ok === false).length;
     const pausedCount = monitors.filter((m) => m.paused).length;
 

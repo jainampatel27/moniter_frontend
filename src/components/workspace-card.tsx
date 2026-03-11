@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +33,11 @@ export function WorkspaceCard({
         window.open(`/status/${workspace.id}`, "_blank");
     };
 
+    const handleSettings = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.push(`/workspace/${workspace.id}/settings`);
+    };
+
     return (
         <Card
             className="group cursor-pointer hover:shadow-md transition-shadow"
@@ -54,6 +59,15 @@ export function WorkspaceCard({
                         onClick={handleStatusPage}
                     >
                         <ExternalLink className="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-primary"
+                        title="Workspace settings"
+                        onClick={handleSettings}
+                    >
+                        <Settings2 className="size-4" />
                     </Button>
                     <Button
                         variant="ghost"
