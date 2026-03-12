@@ -1,15 +1,15 @@
 require('dotenv').config();
-const express    = require('express');
-const cors       = require('cors');
+const express = require('express');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const helmet     = require('helmet');
-const rateLimit  = require('express-rate-limit');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
-const authRoutes      = require('./routes/auth.routes');
+const authRoutes = require('./routes/auth.routes');
 const workspaceRoutes = require('./routes/workspace.routes');
-const monitorRoutes   = require('./routes/monitor.routes');
-const checkRoutes     = require('./routes/check.routes');
-const publicRoutes    = require('./routes/public.routes');
+const monitorRoutes = require('./routes/monitor.routes');
+const checkRoutes = require('./routes/check.routes');
+const publicRoutes = require('./routes/public.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 
 const { startScheduler } = require('./lib/scheduler');
@@ -20,24 +20,18 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
 }
 
-const app  = express();
+const app = express();
 const port = process.env.PORT || 3000;
 
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet());
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Set ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com in .env
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000', 'http://localhost:3001'];
-
+// Allow all origins. `origin: true` reflects the request Origin back which
+// is required when `credentials: true` (wildcard '*' is not allowed by browsers
+// when sending cookies / Authorization headers).
 app.use(cors({
-    origin: (origin, cb) => {
-        // Allow server-to-server / curl requests (no Origin header)
-        if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-        cb(new Error(`CORS: origin ${origin} not allowed`));
-    },
+    origin: true,
     credentials: true,
 }));
 
@@ -65,11 +59,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/public', publicLimiter, publicRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the Monitor API Backend!' });
+    res.json({ message: 'Welcome to the Monitor API Backend!' });
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 const server = app.listen(port, () => {
@@ -88,5 +82,5 @@ const shutdown = (signal) => {
     setTimeout(() => process.exit(1), 10_000).unref();
 };
 process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT',  () => shutdown('SIGINT'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
