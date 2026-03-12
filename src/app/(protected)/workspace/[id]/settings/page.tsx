@@ -1,10 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { ArrowLeft, Loader2, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomDomainCard } from "@/components/custom-domain-card";
+import { SlackCard } from "@/components/slack-card";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
@@ -72,6 +73,9 @@ export default function WorkspaceSettingsPage() {
                     workspaceId={id}
                     workspaceName={workspaceName}
                 />
+                <Suspense>
+                    <SlackCard workspaceId={id} />
+                </Suspense>
             </div>
         </>
     );
