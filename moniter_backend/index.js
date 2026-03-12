@@ -11,6 +11,8 @@ const monitorRoutes = require('./routes/monitor.routes');
 const checkRoutes = require('./routes/check.routes');
 const publicRoutes = require('./routes/public.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const incidentRoutes = require('./routes/incident.routes');
+const slackRoutes = require('./routes/slack.routes');
 
 const { startScheduler } = require('./lib/scheduler');
 
@@ -50,12 +52,11 @@ const publicLimiter = rateLimit({
 
 app.use('/api', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
-// Check routes must be mounted BEFORE monitor routes so GET /status is not
-// swallowed by the generic GET /:id route in monitorRoutes.
 app.use('/api/workspaces/:workspaceId/monitors', checkRoutes);
 app.use('/api/workspaces/:workspaceId/monitors', monitorRoutes);
+app.use('/api/workspaces/:workspaceId/incidents', incidentRoutes);
+app.use('/api/slack', slackRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-// Public (no-auth) routes
 app.use('/api/public', publicLimiter, publicRoutes);
 
 app.get('/', (req, res) => {

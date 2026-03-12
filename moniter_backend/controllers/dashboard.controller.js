@@ -60,7 +60,7 @@ const getDashboard = async (req, res) => {
             select: { id: true, name: true, paused: true },
         });
 
-        const monitorIds    = monitors.map((m) => m.id);
+        const monitorIds = monitors.map((m) => m.id);
         const activeMonitors = monitors.filter((m) => !m.paused);
         const pausedMonitors = monitors.filter((m) => m.paused);
 
@@ -102,8 +102,8 @@ const getDashboard = async (req, res) => {
             let upMs = 0, mTotalMs = 0;
             for (let i = 0; i < checks.length; i++) {
                 const start = new Date(checks[i].startedAt).getTime();
-                const end   = i === 0 ? now : new Date(checks[i - 1].startedAt).getTime();
-                const dur   = Math.max(0, end - start);
+                const end = i === 0 ? now : new Date(checks[i - 1].startedAt).getTime();
+                const dur = Math.max(0, end - start);
                 mTotalMs += dur;
                 if (checks[i].ok) upMs += dur;
                 if (checks[i].responseMs) {
@@ -111,15 +111,15 @@ const getDashboard = async (req, res) => {
                     responseMsCount += checks[i].checkCount;
                 }
             }
-            totalUpMs  += upMs;
-            totalMs    += mTotalMs;
+            totalUpMs += upMs;
+            totalMs += mTotalMs;
 
             return {
-                id:            m.id,
-                name:          m.name,
-                paused:        m.paused,
-                status:        m.paused ? 'paused' : (latest ? (latest.ok ? 'up' : 'down') : 'pending'),
-                uptimePct:     mTotalMs > 0 ? ((upMs / mTotalMs) * 100).toFixed(2) : null,
+                id: m.id,
+                name: m.name,
+                paused: m.paused,
+                status: m.paused ? 'paused' : (latest ? (latest.ok ? 'up' : 'down') : 'pending'),
+                uptimePct: mTotalMs > 0 ? ((upMs / mTotalMs) * 100).toFixed(2) : null,
                 avgResponseMs: null, // filled below per-monitor if needed
             };
         });
@@ -131,8 +131,18 @@ const getDashboard = async (req, res) => {
             ? Math.round(responseMsSum / responseMsCount)
             : null;
 
-        // Incidents = streaks where ok=false (each row = one outage period)
-        const incidentsLast7d = allChecks.filter((c) => !c.ok).length;
+        // Real incidents from the Incident table
+        const incidentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const [incidentsLast7d, openIncidents] = monitorIds.length === 0
+            ? [0, 0]
+            : await Promise.all([
+                prisma.incident.count({
+                    where: { monitorId: { in: monitorIds }, startedAt: { gte: incidentCutoff } },
+                }),
+                prisma.incident.count({
+                    where: { monitorId: { in: monitorIds }, status: 'OPEN' },
+                }),
+            ]);
 
         // ── 5. Daily breakdown for chart ─────────────────────────────────────
         // For each calendar day, collect all streak segments that overlap it
@@ -140,7 +150,7 @@ const getDashboard = async (req, res) => {
 
         const dailyStats = days.map((dateStr) => {
             const dayStart = new Date(dateStr + 'T00:00:00.000Z').getTime();
-            const dayEnd   = dayStart + 86_400_000;
+            const dayEnd = dayStart + 86_400_000;
 
             let dayUpMs = 0, dayTotalMs = 0;
             let dayRespSum = 0, dayRespCount = 0;
@@ -152,13 +162,13 @@ const getDashboard = async (req, res) => {
 
                 for (let i = 0; i < reversed.length; i++) {
                     const segStart = new Date(reversed[i].startedAt).getTime();
-                    const segEnd   = i === reversed.length - 1
+                    const segEnd = i === reversed.length - 1
                         ? now
                         : new Date(reversed[i + 1].startedAt).getTime();
 
                     // Clip to the calendar day
                     const overlapStart = Math.max(segStart, dayStart);
-                    const overlapEnd   = Math.min(segEnd, dayEnd);
+                    const overlapEnd = Math.min(segEnd, dayEnd);
                     if (overlapEnd <= overlapStart) continue;
 
                     const dur = overlapEnd - overlapStart;
@@ -169,7 +179,7 @@ const getDashboard = async (req, res) => {
                         // Weight by checkCount proportionally in this segment
                         const fraction = dur / Math.max(segEnd - segStart, 1);
                         const countInDay = Math.round(reversed[i].checkCount * fraction);
-                        dayRespSum   += reversed[i].responseMs * countInDay;
+                        dayRespSum += reversed[i].responseMs * countInDay;
                         dayRespCount += countInDay;
                     }
                     checksRan += reversed[i].checkCount;
@@ -177,9 +187,9 @@ const getDashboard = async (req, res) => {
             }
 
             return {
-                date:          dateStr,
-                label:         new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
-                uptimePct:     dayTotalMs > 0 ? parseFloat(((dayUpMs / dayTotalMs) * 100).toFixed(2)) : null,
+                date: dateStr,
+                label: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+                uptimePct: dayTotalMs > 0 ? parseFloat(((dayUpMs / dayTotalMs) * 100).toFixed(2)) : null,
                 avgResponseMs: dayRespCount > 0 ? Math.round(dayRespSum / dayRespCount) : null,
                 checksRan,
             };
@@ -188,14 +198,15 @@ const getDashboard = async (req, res) => {
         res.json({
             stats: {
                 totalWorkspaces: workspaces.length,
-                totalMonitors:   monitors.length,
-                activeMonitors:  activeMonitors.length,
-                pausedMonitors:  pausedMonitors.length,
+                totalMonitors: monitors.length,
+                activeMonitors: activeMonitors.length,
+                pausedMonitors: pausedMonitors.length,
                 monitorsUp,
                 monitorsDown,
                 overallUptimePct,
                 avgResponseMs,
                 incidentsLast7d,
+                openIncidents,
             },
             dailyStats,
             monitorBreakdown,

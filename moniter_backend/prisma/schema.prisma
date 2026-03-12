@@ -31,6 +31,8 @@ model Workspace {
   monitors       Monitor[]
   customDomain   String?   @unique   // e.g. "status.theirclient.com"
   domainVerified Boolean   @default(false)
+  slackWebhookUrl String?            // stored after OAuth
+  slackChannel    String?            // e.g. "#alerts"
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
@@ -51,6 +53,7 @@ model Monitor {
   paused         Boolean        @default(false)
   lastCheckedAt  DateTime?
   checks         MonitorCheck[]
+  incidents      Incident[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
@@ -79,4 +82,25 @@ enum HttpMethod {
   GET
   POST
   HEAD
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+}
+
+model Incident {
+  id           String         @id @default(cuid())
+  monitorId    String
+  monitor      Monitor        @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  status       IncidentStatus @default(OPEN)
+  startedAt    DateTime       @default(now())   // when monitor first went down
+  resolvedAt   DateTime?                         // when monitor came back up
+  durationMs   Int?                              // resolvedAt - startedAt in ms
+  notes        String?                           // postmortem / notes (free text)
+  checkCount   Int            @default(1)        // how many failed checks during incident
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([monitorId, startedAt(sort: Desc)])
 }

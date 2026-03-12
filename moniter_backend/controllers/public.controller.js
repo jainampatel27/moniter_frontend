@@ -83,7 +83,33 @@ const publicStatus = async (req, res) => {
             : anyDown ? 'degraded'
                 : 'operational';
 
-        res.json({ workspace, statuses, systemStatus });
+        // Fetch open incidents for all monitors in this workspace
+        const openIncidents = monitorIds.length === 0 ? [] : await prisma.incident.findMany({
+            where: { monitorId: { in: monitorIds }, status: 'OPEN' },
+            orderBy: { startedAt: 'desc' },
+            select: {
+                id: true, monitorId: true, status: true,
+                startedAt: true, checkCount: true, notes: true,
+            },
+        });
+
+        // Recent resolved incidents (last 7 days) for history on status page
+        const recentResolved = monitorIds.length === 0 ? [] : await prisma.incident.findMany({
+            where: {
+                monitorId: { in: monitorIds },
+                status: 'RESOLVED',
+                resolvedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+            },
+            orderBy: { startedAt: 'desc' },
+            take: 10,
+            select: {
+                id: true, monitorId: true, status: true,
+                startedAt: true, resolvedAt: true, durationMs: true,
+                checkCount: true, notes: true,
+            },
+        });
+
+        res.json({ workspace, statuses, systemStatus, openIncidents, recentResolved });
     } catch (err) {
         console.error('publicStatus error:', err);
         res.status(500).json({ error: 'Internal server error' });
